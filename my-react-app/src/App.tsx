@@ -1,17 +1,17 @@
 import { useEffect, useState, type ChangeEvent } from 'react'
 import { type ForecastItem } from './types/forecastitem';
 import { type WeatherType } from './types/weathertype';
-// import { Thermometer } from 'lucide-react';
+import { Thermometer } from 'lucide-react';
 import './App.css'
 
 function App() {
   const API_KEY = import.meta.env.VITE_API_KEY;
   
   const [weatherData, setWeatherData] = useState<WeatherType | null>(null);
-  const [city, setCity] = useState<string>("london")
+  const [city, setCity] = useState<string>("new%20york")
   const [forecast, setForecast] = useState<ForecastItem[]>([]);
   const [searchInput, setSearchInput] = useState<string>("");
-
+  const [tempUnit, setTempUnit] = useState<string>("imperial");
   
   useEffect(() => {
     const fetchWeatherData = async(cityName:string):Promise<void> => {
@@ -43,7 +43,6 @@ function App() {
 
   }, [city, API_KEY]);
 
-
   async function callSearchAPI(searchInput:string) {
     setCity(searchInput);
 
@@ -67,58 +66,75 @@ function App() {
     callSearchAPI(searchInput);
   }
 
+  function convertTemp() {
+    if(tempUnit === "imperial") {
+      setTempUnit("metric")
+    } else {
+      setTempUnit("imperial")
+    }
+  }
+
   return (
     <>
       {weatherData && weatherData.main && weatherData.weather && (
-          <div className="justify justify-center text-center mt-25">
-            <div className="mx-auto w-125 h-150 bg-white block max-w-sm p-6 rounded-lg rounded-base shadow-xs">
-                {/* Search */}
+          <div className="justify justify-center text-center mt-25 selection:bg-sky-300">
+            <div className="mx-auto w-100 bg-white block max-w-sm p-4 rounded-lg rounded-base shadow-xs">
+              {/* Search */}
                 <form className="flex" onSubmit={handleSearch}>
                     <input type='text' value={searchInput} onChange={(e:ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value)}
                     placeholder="Enter a City" className="rounded-s-md grow border border-gray-400 p-2 focus:outline-none"/>
-                    <button type="submit" className="w-16 rounded-e-md bg-sky-900 text-white hover:bg-sky-800">
+                    <button type="submit" className="w-16  bg-sky-600 text-white hover:bg-sky-700">
                         Search
                     </button>
+                    {/* type button prevents form submission or reloading */}
+                    <button type='button' onClick={convertTemp}
+                    className='rounded-e-md bg-yellow-400 text-white hover:bg-yellow-500'>
+                      <Thermometer/>
+                    </button>
                 </form>
-                <div className="mt-10">
+            </div>
+            <div className="mx-auto mt-2 w-100 h-95 bg-white block max-w-sm p-6 rounded-lg rounded-base shadow-xs">
+                {/* temperature data */}
+                <div className="mt-2">
                     <h1 className="text-3xl">{weatherData.name}</h1>
-                    <h1 className="mt-10 text-3xl font-medium">{weatherData.main.temp}°F</h1>
-                    <p className="mt-10 text-lg">{weatherData.weather[0].main}</p>
-                    <div className="mt-5 flex space-x-45 justify-center">
-                        <div>
-                            Humidity
-                            <p>{weatherData.main.humidity}%</p>
-                        </div>
-                        <div>
-                            Wind Speed
-                            <p>{weatherData.wind.speed}mph</p>
-                        </div>
-                    </div>
-                    <br />
-                    <hr />
-                    {/* Forecasting */}
-                    {forecast.length > 0 && (
-                      <div className="mt-5 text-xl font-medium">
-                        5-Day Forecast
-                        <div className="mt-5 text-lg flex flex-row space-x-8 justify-center">
-                          {forecast.map((day, index:number) => 
-                            <div key={index}>
-                              <p>
-                                {new Date(day.dt * 1000).toLocaleDateString("en-US", {
-                                  weekday: "short",
-                                })}
-                              </p>
-                              <img
-                                src={`http://openweathermap.org/img/wn/${day.weather[0].icon}.png`}
-                                alt={day.weather[0].description}
-                              />
-                              <p>{Math.round(day.main.temp)}°F</p>
-                            </div>
-                          )}
-                        </div>
-                    </div>
-                    )}
+                    <h1 className="mt-10 text-3xl font-semibold">
+                      {/* change the temperature when thermometer button is clicked */}
+                      {tempUnit === "imperial" ? weatherData.main.temp : ((weatherData.main.temp - 32) * 5/9).toFixed(2)}
+                      {tempUnit === "imperial" ? " °F" : " °C"}
+                    </h1>
+                    <p className="mt-8 text-2xl font-medium">{weatherData.weather[0].main}</p>
+                    <hr className='mt-5'/>
+                    <h1 className='mt-2 text-lg'>Humidity</h1>
+                    <p>{weatherData.main.humidity}%</p>
+                    <h1 className='mt-3 text-lg'>Wind Speed</h1>
+                    {/* change speed according to unit of temperature */}
+                    {tempUnit === "imperial" ? weatherData.wind.speed : ((weatherData.wind.speed * 1.609).toFixed(2))}
+                    {tempUnit === "imperial" ? " mph" : " km/h"}
                 </div>
+            </div>
+            <div className="mx-auto mt-2 w-100 h-50 bg-white block max-w-sm p-6 rounded-lg rounded-base shadow-xs">
+              {/* forecasting */}
+              {forecast.length > 0 && (
+                <div className="text-xl">
+                    <h1 className='font-semibold'>Weather Forecast</h1>
+                      <div className="mt-5 text-lg flex flex-row space-x-8 justify-center">
+                        {forecast.map((day, index:number) => 
+                          <div key={index}>
+                            <p>
+                              {new Date(day.dt * 1000).toLocaleDateString("en-US", {
+                                weekday: "short",
+                              })}
+                            </p>
+                            <img
+                              src={`http://openweathermap.org/img/wn/${day.weather[0].icon}.png`}
+                              alt={day.weather[0].description}
+                            />
+                            <p>{Math.round(day.main.temp)}°F</p>
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                )}
             </div>
         </div>
       )}
