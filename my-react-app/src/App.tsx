@@ -43,7 +43,7 @@ function App() {
 
   }, [city, API_KEY]);
 
-  async function callSearchAPI(searchInput:string) {
+  async function callSearchAPI(searchInput:string):Promise<void>  {
     setCity(searchInput);
 
     // same code as before but without use effect
@@ -63,6 +63,8 @@ function App() {
   // for submitting the form for the search input and the search button
   function handleSearch(e:React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    // prevent empty input or just spaces by stopping it
+    if (!searchInput.trim()) return;
     callSearchAPI(searchInput);
   }
 
@@ -81,7 +83,7 @@ function App() {
             <div className="mx-auto w-100 bg-white block max-w-sm p-4 rounded-lg rounded-base shadow-xs">
               {/* Search */}
                 <form className="flex" onSubmit={handleSearch}>
-                    <input type='text' value={searchInput} onChange={(e:ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value)}
+                    <input type='text' value={searchInput} onChange={(e:ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value) }
                     placeholder="Enter a City" className="rounded-s-md grow border border-gray-400 p-2 focus:outline-none"/>
                     <button type="submit" className="w-16  bg-sky-600 text-white hover:bg-sky-700">
                         Search
@@ -134,7 +136,7 @@ function App() {
                             {/* change forecast to imperial or metric */}
                             <p>
                               {tempUnit === "imperial" ? (Math.round(day.main.temp)) : (Math.round(day.main.temp - 32) * 5/9).toFixed(0)}
-                              {tempUnit === "imperial" ? " °F" : " °C"}
+                              {tempUnit === "imperial" ? "°F" : "°C"}
                             </p>
                           </div>
                         )}
